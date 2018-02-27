@@ -5,7 +5,6 @@ from pprint import pprint
 from lib import MONGO_CONNECTION_STRING
 
 CLIENT = MongoClient(MONGO_CONNECTION_STRING)
-print(MONGO_CONNECTION_STRING)
 DB = CLIENT.vgdb
 DATA = DB.data
 
@@ -22,9 +21,9 @@ def get(location, distance=10):
 	return ret
 
 
-#	Given a location as a coordinate tuple, and a data package, inserts into the database
-def put(location, data):
-	return DATA.insert_one(data).inserted_id
+#	Inserts documents into the database
+def put(doc):
+	return DATA.insert_one(doc).inserted_id
 
 
 #	Deletes a document from database based on the given ID
