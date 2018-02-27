@@ -1,0 +1,1 @@
+MONGO_CONNECTION_STRING = "mongodb://vguser:vgpassword@virtualgeocaching-shard-00-00-nnsxz.mongodb.net:27017,virtualgeocaching-shard-00-01-nnsxz.mongodb.net:27017,virtualgeocaching-shard-00-02-nnsxz.mongodb.net:27017/test?ssl=true&replicaSet=VirtualGeocaching-shard-0&authSource=admin"
