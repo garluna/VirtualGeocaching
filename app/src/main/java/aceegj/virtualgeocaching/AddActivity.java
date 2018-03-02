@@ -49,12 +49,19 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
     // UI references.
     private EditText mNameView;
     private EditText mMessageView;
+    private Button mAddImageButton;
     private View mProgressView;
-    private View mLoginFormView;
+    private View mMessageFormView;
+
+    private OnClickListener addOnClickListener;
+    private OnClickListener removeOnClickListener;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        
+        if (requestCode == PICK_IMAGE_REQUEST) {
+            mAddImageButton.setText(R.string.action_remove_image);
+            mAddImageButton.setOnClickListener(removeOnClickListener);
+        }
     }
 
     @Override
@@ -62,23 +69,11 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
         setupActionBar();
-        // Set up the login form.
         mNameView = (EditText) findViewById(R.id.name);
-
         mMessageView = (EditText) findViewById(R.id.message);
-        mMessageView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
-                    return true;
-                }
-                return false;
-            }
-        });
+        mAddImageButton = (Button) findViewById(R.id.add_image);
 
-        Button mAddImageButton = (Button) findViewById(R.id.add_image);
-        mAddImageButton.setOnClickListener(new OnClickListener() {
+        addOnClickListener = new OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent();
@@ -86,18 +81,28 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent, "Add Image"), PICK_IMAGE_REQUEST);
             }
-        });
+        };
+        removeOnClickListener = new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mAddImageButton.setText(R.string.action_add_image);
+                mAddImageButton.setOnClickListener(addOnClickListener);
+            }
+        };
+
+        // Set up the login form.
+        mAddImageButton.setOnClickListener(addOnClickListener);
 
         Button mDoneButton = (Button) findViewById(R.id.done_button);
         mDoneButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptLogin();
+                attemptSendMessage();
             }
         });
 
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
+        mMessageFormView = findViewById(R.id.message_form);
+        mProgressView = findViewById(R.id.message_progress);
     }
 
     @Override
@@ -144,7 +149,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    private void attemptLogin() {
+    private void attemptSendMessage() {
         if (mAddToGeocacheTask != null) {
             return;
         }
@@ -153,7 +158,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
         mNameView.setError(null);
         mMessageView.setError(null);
 
-        // Store values at the time of the login attempt.
+        // Store values at the time of the message attempt.
         String name = mNameView.getText().toString();
         String message = mMessageView.getText().toString();
 
@@ -179,12 +184,12 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
         }*/
 
         if (cancel) {
-            // There was an error; don't attempt login and focus the first
+            // There was an error; don't attempt message and focus the first
             // form field with an error.
             focusView.requestFocus();
         } else {
             // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
+            // perform the user message attempt.
             showProgress(true);
             mAddToGeocacheTask = new AddToGeocacheTask(name, message);
             mAddToGeocacheTask.execute((Void) null);
@@ -192,7 +197,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
     }
 
     /**
-     * Shows the progress UI and hides the login form.
+     * Shows the progress UI and hides the message form.
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
@@ -202,12 +207,12 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
+            mMessageFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mMessageFormView.animate().setDuration(shortAnimTime).alpha(
                     show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+                    mMessageFormView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
 
@@ -223,7 +228,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
             // The ViewPropertyAnimator APIs are not available, so simply show
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mMessageFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 

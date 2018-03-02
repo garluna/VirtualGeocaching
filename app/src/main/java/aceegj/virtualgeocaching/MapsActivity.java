@@ -28,6 +28,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+    private static float ZOOM_LEVEL = 20f;
 
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -58,6 +59,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setMaxZoomPreference(ZOOM_LEVEL);
+        mMap.setMinZoomPreference(ZOOM_LEVEL);
+        // Disables all gestures
+        mMap.getUiSettings().setAllGesturesEnabled(false);
 
         while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -77,10 +82,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (mLastKnownLocation != null) {
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                             new LatLng(mLastKnownLocation.getLatitude(),
-                                    mLastKnownLocation.getLongitude()), 18));
+                                    mLastKnownLocation.getLongitude()), ZOOM_LEVEL));
                 }  else {
                     Log.d("tag", "Current location is null. Using defaults.");
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(34.068921, -118.4473698), 18));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(34.068921, -118.4473698), ZOOM_LEVEL));
                     mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 }
             }
