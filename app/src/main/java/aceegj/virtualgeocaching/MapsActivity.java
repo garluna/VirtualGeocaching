@@ -1,6 +1,7 @@
 package aceegj.virtualgeocaching;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Looper;
@@ -76,10 +77,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (mLastKnownLocation != null) {
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                             new LatLng(mLastKnownLocation.getLatitude(),
-                                    mLastKnownLocation.getLongitude()), 15));
+                                    mLastKnownLocation.getLongitude()), 18));
                 }  else {
                     Log.d("tag", "Current location is null. Using defaults.");
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(34.068921, -118.4473698), 15));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(34.068921, -118.4473698), 18));
                     mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 }
             }
@@ -89,11 +90,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 null);
 
         // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney").snippet("Yolo: Lolo fweoajofjaweojweoa oijfweaj we \n FEWjoijowefjao fweoowai"));
+        LatLng sydney = new LatLng(34.068921, -118.4473698);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney").snippet("Yolo: Lolo fweoajofjaweojweoa oijfweaj we \n FEWjoijowefjao fweoowai"));
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
+                Intent intent = new Intent(MapsActivity.this, MessageActivity.class);
+                intent.putExtra("LatLng", marker.getPosition());
+                startActivity(intent);
                 return true;
             }
         });

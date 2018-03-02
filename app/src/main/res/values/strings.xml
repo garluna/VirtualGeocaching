@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">Virtual Geocaching</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_message">lol</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_add">Add Log</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_name">Name</string>
+    <string name="prompt_message">Message (optional)</string>
+    <string name="action_done">Done!</string>
+    <string name="action_done_short">Done!</string>
+    <string name="action_add_image">Add Image</string>
+    <string name="error_field_required">This field is required</string>
 </resources>
