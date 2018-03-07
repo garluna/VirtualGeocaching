@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="aceegj.virtualgeocaching.MessageActivity"
-    tools:showIn="@layout/activity_message">
+    tools:showIn="@layout/activity_message"
+    android:scrollbars="vertical">
 
     <LinearLayout
         android:id="@+id/message_layout"
