@@ -10,15 +10,19 @@ app = Flask(__name__)
 
 @app.route('/receive', methods=['PUT'])
 def handle_put():
-    put(json.dumps(request.json).doc)
+    req_json = request.get_json()
+    put(req_json)
 
 @app.route('/retrieve', methods=['GET'])
 def handle_get():
-    get(json.dumps(request.json).location, json.dumps(request.json).distance)
+    req_json = request.get_json()
+    location = ( req_json['latitude'] , req_json['longitude'] )
+    get(location)
 
 @app.route('/delete', methods=['DELETE'])
 def handle_delete():
-    delete(json.dumps(request.json).id)
+    req_json = request.get_json()
+    delete(req_json['id'])
 
 
 if __name__ == '__main__':
