@@ -29,6 +29,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import java.util.ArrayList;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     private static float ZOOM_LEVEL = 20f;
 
@@ -38,6 +40,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
     private FloatingActionButton mFloatingActionButton;
+    private LatLng mLatLng;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +84,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // implement thingies here
+                GeocacheData.getGeocacheData().messagesMap.put(mLatLng, new ArrayList<GeocacheData.GeocacheMessage>());
+                mFloatingActionButton.setVisibility(View.INVISIBLE);
+                updateMarkers();
+                Intent intent = new Intent(MapsActivity.this, MessageActivity.class);
+                intent.putExtra("LatLng", mLatLng);
+                startActivity(intent);
             }
         });
 
@@ -91,14 +99,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onLocationResult(LocationResult locationResult) {
                 mLastKnownLocation = locationResult.getLastLocation();
                 if (mLastKnownLocation != null) {
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                            new LatLng(mLastKnownLocation.getLatitude(),
-                                    mLastKnownLocation.getLongitude()), ZOOM_LEVEL));
+                    mLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLatLng, ZOOM_LEVEL));
                 }  else {
                     Log.d("tag", "Current location is null. Using defaults.");
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(34.068921, -118.4473698), ZOOM_LEVEL));
+                    mLatLng = new LatLng(34.068921, -118.4473698);
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLatLng, ZOOM_LEVEL));
                     mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 }
+                boolean set = true;
+                for (LatLng oldLatLng : GeocacheData.getGeocacheData().messagesMap.keySet()) {
+                    if (GeocacheData.distance(mLatLng, oldLatLng) < 15f) {
+                        set = false;
+                        break;
+                    }
+                }
+                mFloatingActionButton.setVisibility(set ? View.VISIBLE : View.INVISIBLE);
             }
         };
         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest,
@@ -106,8 +122,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 null);
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(34.068921, -118.4473698);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney").snippet("Yolo: Lolo fweoajofjaweojweoa oijfweaj we \n FEWjoijowefjao fweoowai"));
+        //LatLng sydney = new LatLng(34.068921, -118.4473698);
+        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney").snippet("Yolo: Lolo fweoajofjaweojweoa oijfweaj we \n FEWjoijowefjao fweoowai"));
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -117,6 +133,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return true;
             }
         });
+        updateMarkers();
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+    }
+
+    private void updateMarkers() {
+        mMap.clear();
+        for (LatLng oldLatLng : GeocacheData.getGeocacheData().messagesMap.keySet()) {
+            mMap.addMarker(new MarkerOptions().position(oldLatLng));
+        }
     }
 }

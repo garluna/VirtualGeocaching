@@ -55,6 +55,12 @@
 
             </android.support.design.widget.TextInputLayout>
 
+            <CheckBox
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Show to everyone"/>
+
             <Button
                 android:id="@+id/add_image"
                 style="?android:textAppearanceSmall"
