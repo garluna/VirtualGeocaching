@@ -1,6 +1,7 @@
 from pymongo import MongoClient, GEO2D
 from bson.objectid import ObjectId
 from pprint import pprint
+import json
 
 from lib import MONGO_CONNECTION_STRING
 
@@ -12,20 +13,31 @@ DATA = DB.data
 #	http://api.mongodb.com/python/current/examples/geo.html
 
 
-#	Given a location as a coordinate tuple, and a distance, returns every nearby object
-def get(location, distance=10):
-	query = {"loc": {"$within": {"$center": [list(location), distance]}}}
+#	Given a location as a coordinate tuple, and a distance, returns every nearby object that the user should see
+def get(data):
+	data = json.loads(data)
+	query = {"loc": {"$within": {"$center": [list(data["location"]), data["distance"]]}}}
 	ret = []
+
 	for doc in DATA.find(query).sort("_id"):
-		ret.append(doc)
-	return ret
+		if (doc["private"] == True and doc["user"] == data["user"]) or doc["private"] == False:
+			ret.append(doc)
+
+	as_dict = {}
+	for doc in ret:
+		as_dict[doc["_id"]] = doc
+	return json.dumps(as_dict)
 
 
-#	Inserts documents into the database
-def put(doc):
-	return DATA.insert_one(doc).inserted_id
+#	Inserts a document into the database
+def put(data):
+	data = json.loads(data)
+	ret = {}
+	ret["id"] = DATA.insert_one(data).inserted_id
+	return json.dumps(ret)
 
 
 #	Deletes a document from database based on the given ID
-def delete(doc_id):
-	return DATA.remove({"_id": ObjectId(doc_id)})
+def delete(data):
+	data = json.loads(data)
+	return json.dumps(DATA.remove({"_id": ObjectId(data["id"])}))
