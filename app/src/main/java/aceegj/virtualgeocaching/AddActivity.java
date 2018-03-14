@@ -5,6 +5,9 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -30,8 +33,23 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -56,11 +74,16 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
     private OnClickListener addOnClickListener;
     private OnClickListener removeOnClickListener;
 
+    private Uri mUri;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PICK_IMAGE_REQUEST) {
-            mAddImageButton.setText(R.string.action_remove_image);
-            mAddImageButton.setOnClickListener(removeOnClickListener);
+            if (resultCode == RESULT_OK && data != null) {
+                mAddImageButton.setText(R.string.action_remove_image);
+                mAddImageButton.setOnClickListener(removeOnClickListener);
+                mUri = data.getData();
+            }
         }
     }
 
@@ -78,7 +101,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
             public void onClick(View view) {
                 Intent intent = new Intent();
                 intent.setType("image/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
                 startActivityForResult(Intent.createChooser(intent, "Add Image"), PICK_IMAGE_REQUEST);
             }
         };
@@ -87,6 +110,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
             public void onClick(View view) {
                 mAddImageButton.setText(R.string.action_add_image);
                 mAddImageButton.setOnClickListener(addOnClickListener);
+                mUri = null;
             }
         };
 
@@ -118,6 +142,12 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+
+    private static int getPowerOfTwoForSampleRatio(double ratio){
+        int k = Integer.highestOneBit((int) Math.floor(ratio));
+        if (k == 0) return 1;
+        else return k;
     }
 
     /**
@@ -191,7 +221,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
             // Show a progress spinner, and kick off a background task to
             // perform the user message attempt.
             showProgress(true);
-            mAddToGeocacheTask = new AddToGeocacheTask(name, message);
+            mAddToGeocacheTask = new AddToGeocacheTask(name, message, mUri);
             mAddToGeocacheTask.execute((Void) null);
         }
     }
@@ -233,13 +263,14 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
     }
 
     public class AddToGeocacheTask extends AsyncTask<Void, Void, Boolean> {
-
         private final String mName;
         private final String mMessage;
+        private final Uri mImageUri;
 
-        AddToGeocacheTask(String name, String message) {
+        AddToGeocacheTask(String name, String message, Uri imageUri) {
             mName = name;
             mMessage = message;
+            mImageUri = imageUri;
         }
 
         @Override
@@ -249,7 +280,77 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
             try {
                 // Simulate network access.
                 Thread.sleep(2000);
-            } catch (InterruptedException e) {
+                /*String requestString = "";
+                DataInputStream dis = null;
+                StringBuffer messagebuffer = new StringBuffer();
+                URL url = new URL("http", "localhost", "recieve");
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                httpURLConnection.setRequestMethod("POST");
+
+                String date = new SimpleDateFormat("dd-MM-yyyy").format(Calendar.getInstance().getTime());
+
+                InputStream input = AddActivity.this.getContentResolver().openInputStream(uri);
+                BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
+                onlyBoundsOptions.inJustDecodeBounds = true;
+                onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                BitmapFactory.decodeStream(input, null, onlyBoundsOptions);
+                input.close();
+
+                if ((onlyBoundsOptions.outWidth == -1) || (onlyBoundsOptions.outHeight == -1)) {
+                    return null;
+                }
+
+                int originalSize = (onlyBoundsOptions.outHeight > onlyBoundsOptions.outWidth) ? onlyBoundsOptions.outHeight : onlyBoundsOptions.outWidth;
+
+                double THUMBNAIL_SIZE = 128f;
+                double ratio = (originalSize > THUMBNAIL_SIZE) ? (originalSize / THUMBNAIL_SIZE) : 1.0;
+
+                BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+                bitmapOptions.inSampleSize = getPowerOfTwoForSampleRatio(ratio);
+                bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                input = AddActivity.this.getContentResolver().openInputStream(mImageUri);
+                Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
+                input.close();
+                bitmap.compress(new Bitmap.CompressFormat());
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("name", mName);
+                jsonObject.put("message", mMessage);
+                jsonObject.put("image", mImageUri); //CHANGE THIS TODO ELTON
+                jsonObject.put("time", date);
+
+                OutputStream out = new BufferedOutputStream(httpURLConnection.getOutputStream());
+
+                out.write(requestString.getBytes());
+
+                out.flush();
+
+                InputStream in = new BufferedInputStream(httpURLConnection.getInputStream());
+
+                dis = new DataInputStream(in);
+
+                int ch;
+
+                long len = httpURLConnection.getContentLength();
+
+                if (len != -1) {
+
+                    for (int i = 0; i < len; i++)
+
+                        if ((ch = dis.read()) != -1) {
+
+                            messagebuffer.append((char) ch);
+                        }
+                } else {
+
+                    while ((ch = dis.read()) != -1)
+                        messagebuffer.append((char) ch);
+                }
+
+                dis.close();*/
+
+
+            } catch (Exception e) {
                 return false;
             }
 
@@ -263,6 +364,8 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
             showProgress(false);
 
             if (success) {
+                String date = new SimpleDateFormat("yyyy/MM/dd").format(Calendar.getInstance().getTime());
+                GeocacheData.getGeocacheData().messagesMap.get(getIntent().getExtras().get("LatLng")).add(new GeocacheData.GeocacheMessage(mName, date, mMessage, mUri));
                 finish();
             } else {
                 // fail

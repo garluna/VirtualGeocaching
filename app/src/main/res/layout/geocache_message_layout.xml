@@ -40,7 +40,8 @@
         android:layout_height="wrap_content"
         android:textColor="#2626a3"
         android:textSize="16sp"
-        tools:text="I am a cool message. This is such a great app."/>
+        tools:text="I am a cool message. This is such a great app."
+        android:layout_marginBottom="4dp"/>
     <ImageView
         android:id="@+id/message_image_view"
         android:layout_width="match_parent"
