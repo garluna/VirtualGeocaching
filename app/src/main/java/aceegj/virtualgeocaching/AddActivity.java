@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -23,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -39,6 +41,9 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -275,12 +280,8 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-                /*String requestString = "";
+                String requestString = "";
                 DataInputStream dis = null;
                 StringBuffer messagebuffer = new StringBuffer();
                 URL url = new URL("http", "localhost", "recieve");
@@ -289,7 +290,7 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
 
                 String date = new SimpleDateFormat("dd-MM-yyyy").format(Calendar.getInstance().getTime());
 
-                InputStream input = AddActivity.this.getContentResolver().openInputStream(uri);
+                InputStream input = AddActivity.this.getContentResolver().openInputStream(mImageUri);
                 BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
                 onlyBoundsOptions.inJustDecodeBounds = true;
                 onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
@@ -311,19 +312,28 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
                 input = AddActivity.this.getContentResolver().openInputStream(mImageUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
                 input.close();
-                bitmap.compress(new Bitmap.CompressFormat());
+
+                File filename = new File(Environment.getExternalStorageDirectory(), "image.jpg");
+                FileOutputStream out = new FileOutputStream(filename);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 60, out);
+                out.flush();
+                out.close();
+                FileInputStream fin = new FileInputStream(filename);
+                byte[] imageBytes = new byte[(int)filename.length()];
+                fin.read(imageBytes, 0, imageBytes.length);
+                fin.close();
 
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("name", mName);
                 jsonObject.put("message", mMessage);
-                jsonObject.put("image", mImageUri); //CHANGE THIS TODO ELTON
+                jsonObject.put("image", Base64.encodeToString(imageBytes, Base64.DEFAULT));
                 jsonObject.put("time", date);
 
-                OutputStream out = new BufferedOutputStream(httpURLConnection.getOutputStream());
+                OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
 
-                out.write(requestString.getBytes());
+                outputStream.write(requestString.getBytes());
 
-                out.flush();
+                outputStream.flush();
 
                 InputStream in = new BufferedInputStream(httpURLConnection.getInputStream());
 
@@ -347,14 +357,13 @@ public class AddActivity extends AppCompatActivity implements LoaderCallbacks<Cu
                         messagebuffer.append((char) ch);
                 }
 
-                dis.close();*/
+                dis.close();
 
 
             } catch (Exception e) {
                 return false;
             }
 
-            // TODO: register the new account here.
             return true;
         }
 
