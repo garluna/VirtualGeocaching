@@ -89,13 +89,20 @@ public class GeocacheData {
                 JSONArray pins = jsonObject.getJSONArray("pins");
                 for (int i = 0; i < pins.length(); i++) {
                     JSONObject pin = pins.getJSONObject(i);
-                    byte[] imageData = Base64.decode(pin.getString("image"), Base64.DEFAULT);
-                    File filename = new File(Environment.getExternalStorageDirectory(), "image" + i + ".jpg");
-                    FileOutputStream out = new FileOutputStream(filename);
-                    out.write(imageData);
-                    out.flush();
-                    out.close();
-                    geocacheMessages.add(new GeocacheMessage(pin.getString("name"), pin.getString("date"), pin.getString("message"), android.net.Uri.parse(filename.toString())));
+                    JSONArray data = pin.getJSONArray("data");
+                    String lat = pin.getString("lat");
+                    String lng = pin.getString("lng");
+                    geocacheMessages = new ArrayList<GeocacheMessage>();
+                    geocacheData.messagesMap.put(new LatLng(Float.parseFloat(lat), Float.parseFloat(lng)), geocacheMessages);
+                    for (int j = 0; j < data.length(); j++) {
+                        byte[] imageData = Base64.decode(pin.getString("image"), Base64.DEFAULT);
+                        File filename = new File(Environment.getExternalStorageDirectory(), "image" + i + ".jpg");
+                        FileOutputStream out = new FileOutputStream(filename);
+                        out.write(imageData);
+                        out.flush();
+                        out.close();
+                        geocacheMessages.add(new GeocacheMessage(pin.getString("name"), pin.getString("date"), pin.getString("message"), android.net.Uri.parse(filename.toString())));
+                    }
                 }
 
             } catch (Exception e) {
