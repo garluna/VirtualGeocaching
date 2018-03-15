@@ -9,6 +9,9 @@ CLIENT = MongoClient(MONGO_CONNECTION_STRING)
 DB = CLIENT.vgdb
 DATA = DB.data
 
+#	Viewing distance for pins - experiment with this
+DISTANCE = 2
+
 #	REFERENCE FOR ALL MONGODB FUNCTIONS:
 #	http://api.mongodb.com/python/current/examples/geo.html
 
@@ -16,7 +19,7 @@ DATA = DB.data
 #	Given a location as a coordinate tuple, and a distance, returns every nearby object that the user should see
 def get(data):
 	data = json.loads(data)
-	query = {"loc": {"$within": {"$center": [list(data["location"]), data["distance"]]}}}
+	query = {"location": {"$within": {"$center": [list(data["location"]), DISTANCE]}}}
 	ret = []
 
 	for doc in DATA.find(query).sort("_id"):
@@ -25,7 +28,11 @@ def get(data):
 
 	as_dict = {}
 	for doc in ret:
-		as_dict[doc["_id"]] = doc
+		key = str(doc["_id"])
+		del doc["_id"]
+
+		as_dict[key] = doc
+
 	return json.dumps(as_dict)
 
 
@@ -33,7 +40,7 @@ def get(data):
 def put(data):
 	data = json.loads(data)
 	ret = {}
-	ret["id"] = DATA.insert_one(data).inserted_id
+	ret["id"] = str(DATA.insert_one(data).inserted_id)
 	return json.dumps(ret)
 
 
